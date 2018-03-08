@@ -1,8 +1,11 @@
 package wxpay
 
 import (
+	"encoding/json"
 	"encoding/xml"
 	"errors"
+	"fmt"
+	"time"
 )
 
 const (
@@ -275,4 +278,20 @@ func Notify(config WxPayConfig, body []byte) (resp NotifyResponse, err error) {
 		return
 	}
 	return
+}
+
+func JsApiPay(config WxPayConfig, prepayId string) (string, error) {
+	jsApiObj := make(map[string]string)
+	jsApiObj["appId"] = config.AppId
+	timeStamp := fmt.Sprintf("%d", time.Now().Unix())
+	jsApiObj["timeStamp"] = timeStamp
+	jsApiObj["nonceStr"] = getNonceStr(32) //随机字符串
+	jsApiObj["package"] = "prepay_id=" + prepayId
+	jsApiObj["signType"] = "MD5"
+	jsApiObj["paySign"] = makeSign(jsApiObj, config.AppKey)
+	body, err := json.Marshal(jsApiObj)
+	if err != nil {
+		return "", err
+	}
+	return string(body), nil
 }
