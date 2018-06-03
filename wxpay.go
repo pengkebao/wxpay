@@ -274,7 +274,7 @@ func Notify(config WxPayConfig, body []byte) (resp NotifyResponse, err error) {
 	}
 	sign := makeSign(xmlMap, config.AppKey)
 	if resp.Sign != sign {
-		err = errors.New("sign err")
+		err = errors.New("sign err resp:" + resp.Sign + ",my:" + sign)
 		return
 	}
 	return
