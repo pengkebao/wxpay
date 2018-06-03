@@ -107,3 +107,31 @@ type NotifyResponse struct {
 	Attach        string `xml:"attach"`         // 商家数据包，原样返回
 	TimeEnd       string `xml:"time_end"`       // 支付完成时间
 }
+
+//刷卡支付返回值
+type MicroPayResponse struct {
+	BaseResponse `xml:",innerXml"`
+
+	OpenId             string `xml:"openid"`
+	IsSubscribe        string `xml:"is_subscribe"`
+	TradeType          string `xml:"trade_type"`
+	BankType           string `xml:"bank_type"`
+	FeeType            string `xml:"fee_type"`
+	TotalFee           string `xml:"total_fee"`
+	SettlementTotalFee string `xml:"settlement_total_fee"`
+	CouponFee          string `xml:"coupon_fee"`
+	CashFeeType        string `xml:"cash_fee_type"`
+	CashFee            string `xml:"cash_fee"`
+	TransactionId      string `xml:"transaction_id"`
+	OutTradeNo         string `xml:"out_trade_no"`
+	Attach             string `xml:"attach"`
+	TimeEnd            string `xml:"time_end"`
+	PromotionDetail    string `xml:"promotion_detail"`
+}
+
+//撤销订单返回值
+type ReverseOrderResponse struct {
+	BaseResponse `xml:",innerXml"`
+
+	Recall string `xml:"recall"`
+}

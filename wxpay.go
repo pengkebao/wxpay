@@ -13,8 +13,13 @@ const (
 	WXPAY_ORDERQUERY_URL   = "https://api.mch.weixin.qq.com/pay/orderquery"   // 查询订单
 	WXPAY_CLOSEORDER_URL   = "https://api.mch.weixin.qq.com/pay/closeorder"   // 关闭订单
 	WXPAY_REFUNDQUERY_URL  = "https://api.mch.weixin.qq.com/pay/refundquery"  // 退款查询
+
 	// 需要证书
 	WXPAY_REFUND_URL = "https://api.mch.weixin.qq.com/secapi/pay/refund" // 申请退款
+
+	//刷卡支付相关接口地址接口
+	WXPAY_MICROPAY_URL = "https://api.mch.weixin.qq.com/pay/micropay"	//提交刷卡支付
+	WXPAY_REVERSE_URL = "https://api.mch.weixin.qq.com/secapi/pay/reverse"	//撤销订单(需要证书)
 )
 
 //统一下单，WxPayUnifiedOrder中out_trade_no、body、total_fee、trade_type必填
@@ -274,7 +279,7 @@ func Notify(config WxPayConfig, body []byte) (resp NotifyResponse, err error) {
 	}
 	sign := makeSign(xmlMap, config.AppKey)
 	if resp.Sign != sign {
-		err = errors.New("sign err resp:" + resp.Sign + ",my:" + sign)
+		err = errors.New("sign err")
 		return
 	}
 	return
@@ -294,4 +299,95 @@ func JsApiPay(config WxPayConfig, prepayId string) (string, error) {
 		return "", err
 	}
 	return string(body), nil
+}
+
+//刷卡支付订单提交
+func MicroPay(config WxPayConfig, params map[string]string) (resp MicroPayResponse, err error){
+	if params["out_trade_no"] == "" {
+		err = errors.New("缺少刷卡支付接口必填参数out_trade_no！")
+		return
+	} else if params["body"] == "" {
+		err = errors.New("缺少刷卡支付接口必填参数body！")
+		return
+	} else if params["total_fee"] == "" {
+		err = errors.New("缺少刷卡支付接口必填参数total_fee！")
+		return
+	} else if params["auth_code"] == "" {
+		err = errors.New("缺少刷卡支付接口必填参数auth_code！")
+		return
+	}
+	// 终端IP
+	if params["spbill_create_ip"] == "" {
+		params["spbill_create_ip"] = config.SpbillCreateIp
+	}
+	params["appid"] = config.AppId
+	params["mch_id"] = config.MchId
+	params["trade_type"] = config.TradeType
+	params["nonce_str"] = getNonceStr(32) //随机字符串
+	params["sign"] = makeSign(params, config.AppKey)
+	xmlString := map2Xml(params)
+	body, err := sendXmlRequest("POST", WXPAY_MICROPAY_URL, xmlString, config.TlsConfig, config.Timeout)
+	if err != nil {
+		return
+	}
+	resp = MicroPayResponse{}
+	err = xml.Unmarshal(body, &resp)
+	if err != nil {
+		return
+	} else if resp.ReturnCode != "SUCCESS" {
+		err = errors.New(resp.ReturnMsg)
+		return
+	}
+	// 校验
+	xmlMap, err := xml2Map(resp)
+	if err != nil {
+		return
+	}
+	sign := makeSign(xmlMap, config.AppKey)
+	if resp.Sign != sign {
+		err = errors.New("sign err")
+		return
+	}
+	return
+}
+
+//订单撤销接口
+func ReverseOrder(config WxPayConfig, params map[string]string)(resp ReverseOrderResponse, err error){
+	if params["out_trade_no"] == "" {
+		err = errors.New("订单撤销接口中，out_trade_no必填！")
+		return
+	}
+
+	params["appid"] = config.AppId
+	params["mch_id"] = config.MchId
+	params["nonce_str"] = getNonceStr(32) //随机字符串
+	params["sign"] = makeSign(params, config.AppKey)
+
+	xmlString := map2Xml(params)
+	body, err := sendXmlRequest("POST", WXPAY_REVERSE_URL, xmlString, config.TlsConfig, config.Timeout)
+	if err != nil {
+		return
+	}
+
+	resp = ReverseOrderResponse{}
+	err = xml.Unmarshal(body, &resp)
+	if err != nil {
+		return
+	} else if resp.ReturnCode != "SUCCESS" {
+		err = errors.New(resp.ReturnMsg)
+		return
+	}
+
+	// 校验
+	xmlMap, err := xml2Map(resp)
+	if err != nil {
+		return
+	}
+
+	sign := makeSign(xmlMap, config.AppKey)
+	if resp.Sign != sign {
+		err = errors.New("sign err")
+		return
+	}
+	return
 }
