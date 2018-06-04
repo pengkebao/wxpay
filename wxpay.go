@@ -18,8 +18,8 @@ const (
 	WXPAY_REFUND_URL = "https://api.mch.weixin.qq.com/secapi/pay/refund" // 申请退款
 
 	//刷卡支付相关接口地址接口
-	WXPAY_MICROPAY_URL = "https://api.mch.weixin.qq.com/pay/micropay"	//提交刷卡支付
-	WXPAY_REVERSE_URL = "https://api.mch.weixin.qq.com/secapi/pay/reverse"	//撤销订单(需要证书)
+	WXPAY_MICROPAY_URL = "https://api.mch.weixin.qq.com/pay/micropay"       //提交刷卡支付
+	WXPAY_REVERSE_URL  = "https://api.mch.weixin.qq.com/secapi/pay/reverse" //撤销订单(需要证书)
 )
 
 //统一下单，WxPayUnifiedOrder中out_trade_no、body、total_fee、trade_type必填
@@ -302,7 +302,7 @@ func JsApiPay(config WxPayConfig, prepayId string) (string, error) {
 }
 
 //刷卡支付订单提交
-func MicroPay(config WxPayConfig, params map[string]string) (resp MicroPayResponse, err error){
+func MicroPay(config WxPayConfig, params map[string]string) (resp MicroPayResponse, err error) {
 	if params["out_trade_no"] == "" {
 		err = errors.New("缺少刷卡支付接口必填参数out_trade_no！")
 		return
@@ -352,12 +352,11 @@ func MicroPay(config WxPayConfig, params map[string]string) (resp MicroPayRespon
 }
 
 //订单撤销接口
-func ReverseOrder(config WxPayConfig, params map[string]string)(resp ReverseOrderResponse, err error){
-	if params["out_trade_no"] == "" {
-		err = errors.New("订单撤销接口中，out_trade_no必填！")
+func ReverseOrder(config WxPayConfig, params map[string]string) (resp ReverseOrderResponse, err error) {
+	if params["out_trade_no"] == "" && params["transaction_id"] == "" {
+		err = errors.New("订单撤销接口中，out_trade_no、transaction_id至少填一个！")
 		return
 	}
-
 	params["appid"] = config.AppId
 	params["mch_id"] = config.MchId
 	params["nonce_str"] = getNonceStr(32) //随机字符串
