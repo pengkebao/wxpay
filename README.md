@@ -57,3 +57,5 @@ params := map[string]string{
 resp, err := wxpay.RefundQuery(payConfig, params)
 
 ```
+
+Add AppApiPay 2020年5月20
