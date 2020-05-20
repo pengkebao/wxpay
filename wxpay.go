@@ -315,8 +315,8 @@ func AppApiPay(config WxPayConfig, prepayId string) map[string]string {
 	appApiObj["partnerid"] = config.MchId
 	appApiObj["prepayid"] = prepayId
 	appApiObj["package"] = "Sign=WXPay"
-	appApiObj["nonceStr"] = getNonceStr(32) //随机字符串
-	appApiObj["timeStamp"] = timeStamp
+	appApiObj["noncestr"] = getNonceStr(32) //随机字符串
+	appApiObj["timestamp"] = timeStamp
 	appApiObj["sign"] = makeSign(appApiObj, config.AppKey)
 	return appApiObj
 }
